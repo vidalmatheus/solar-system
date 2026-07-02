@@ -1,24 +1,3 @@
-function xmlh() {
-  if (window.XMLHttpRequest) {
-    // code for modern browsers
-    var xmlhttp = new XMLHttpRequest();
-  } else {
-    // code for old IE browsers
-    var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-  }
-  return xmlhttp;
-}
-
-var xmlhttp = xmlh();
-
-function req_url(body_name) {
-  return (
-    "https://api.le-systeme-solaire.net/rest/bodies?filter[]=englishName,eq," +
-    body_name +
-    "&data=meanRadius,mass,massValue,massExponent,gravity,escape,sideralOrbit,sideralRotation,moons,aphelion,perihelion"
-  );
-}
-
 /*
 Exemlo formato de raw_data
 raw_data = PlanetsDataJSON.bodies[0]
@@ -66,57 +45,23 @@ class PlanetDataFromAPI {
   }
 }
 
-// main
-
-let PlanetsList = [
-  "mercury",
-  "venus",
-  "earth",
-  "mars",
-  "jupiter",
-  "pluto",
-  "uranus",
-  "neptune",
-  "saturn",
-];
-let PlanetsDataList = [];
-(function loop(i, length) {
-  if (i >= length) {
-    return;
-  }
-  let planet = PlanetsList[i];
-  PlanetsDataList[i] = new PlanetDataFromAPI(planet);
-  // Ajustes para contato com API
-  let raw_data;
-  xmlhttp.open("GET", req_url(planet));
-  xmlhttp.onreadystatechange = function () {
-    if (this.readyState == 4 && this.status == 200) {
-      let PlanetsDataJSON = this.response;
-      raw_data = PlanetsDataJSON.bodies[0];
-      PlanetsDataList[i].inicia(raw_data);
-      loop(i + 1, length);
-    }
-  };
-  xmlhttp.responseType = "json";
-  xmlhttp.send();
-})(0, PlanetsList.length);
-
-function request_bodies_data(body_name) {
-  return fetch(
-    "https://api.le-systeme-solaire.net/rest/bodies?filter[]=englishName,eq," +
-    body_name +
-    "&data=meanRadius,mass,massValue,massExponent,gravity,escape,sideralOrbit,sideralRotation,moons"
-  )
-    .then((res) => {
-      if (res.ok) {
-        console.log("SUCCESS");
-      } else {
-        console.log("Not Successful");
-      }
-      return res.json();
-    })
-    .then((body_data) => {
-      return body_data;
-    })
-    .catch((error) => console.log("ERROR"));
-}
+// Bundled planetary data.
+//
+// This used to be fetched live from https://api.le-systeme-solaire.net, but that
+// API now requires an API key (returns 401 without a Bearer token). Since these
+// are physical constants that never change, we ship the values locally so the
+// app works offline and on static hosts (e.g. GitHub Pages) with no key needed.
+//
+// Each entry matches the shape the API returned, so PlanetDataFromAPI.inicia()
+// consumes it unchanged. Values from le-systeme-solaire.net (distances in km,
+// sideralOrbit in Earth days, sideralRotation in hours; negative = retrograde).
+const PLANET_API_DATA = {
+  mercury: { meanRadius: 2439.4, aphelion: 69816900, perihelion: 46001200, mass: { massValue: 3.30114, massExponent: 23 }, gravity: 3.7, escape: 4250, sideralOrbit: 87.969, sideralRotation: 1407.6, moons: null },
+  venus: { meanRadius: 6051.8, aphelion: 108942109, perihelion: 107476259, mass: { massValue: 4.86747, massExponent: 24 }, gravity: 8.87, escape: 10360, sideralOrbit: 224.701, sideralRotation: -5832.5, moons: null },
+  earth: { meanRadius: 6371.0084, aphelion: 152100000, perihelion: 147095000, mass: { massValue: 5.97237, massExponent: 24 }, gravity: 9.8, escape: 11190, sideralOrbit: 365.256, sideralRotation: 23.9345, moons: [{ moon: "Moon" }] },
+  mars: { meanRadius: 3389.5, aphelion: 249200000, perihelion: 206600000, mass: { massValue: 6.41712, massExponent: 23 }, gravity: 3.71, escape: 5030, sideralOrbit: 686.885, sideralRotation: 24.6229, moons: [{ moon: "Phobos" }, { moon: "Deimos" }] },
+  jupiter: { meanRadius: 69911, aphelion: 816081455, perihelion: 740595274, mass: { massValue: 1.89819, massExponent: 27 }, gravity: 24.79, escape: 60200, sideralOrbit: 4332.589, sideralRotation: 9.925, moons: new Array(95).fill({}) },
+  saturn: { meanRadius: 58232, aphelion: 1503509229, perihelion: 1349823615, mass: { massValue: 5.6834, massExponent: 26 }, gravity: 10.44, escape: 36090, sideralOrbit: 10759.22, sideralRotation: 10.656, moons: new Array(146).fill({}) },
+  uranus: { meanRadius: 25362, aphelion: 3006318143, perihelion: 2734998229, mass: { massValue: 8.68127, massExponent: 25 }, gravity: 8.87, escape: 21380, sideralOrbit: 30688.5, sideralRotation: -17.24, moons: new Array(27).fill({}) },
+  neptune: { meanRadius: 24622, aphelion: 4537039826, perihelion: 4459631496, mass: { massValue: 1.02413, massExponent: 26 }, gravity: 11.15, escape: 23560, sideralOrbit: 60182, sideralRotation: 16.11, moons: new Array(14).fill({}) },
+};

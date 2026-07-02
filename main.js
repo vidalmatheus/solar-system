@@ -123,17 +123,11 @@ const setMouse = () => {
 };
 
 const getDataFromApi = async (bodyName) => {
-  const promise = fetch(
-    "https://api.le-systeme-solaire.net/rest/bodies?filter[]=englishName,eq," +
-    bodyName +
-    "&data=meanRadius,mass,massValue,massExponent,gravity,escape,sideralOrbit,sideralRotation,moons,aphelion,perihelion"
-  );
-
-  const response = await promise;
-
+  // Data is bundled locally (see api_data.js). The live API now requires an
+  // API key, so we read from PLANET_API_DATA and keep the same response shape.
   return {
     "name": bodyName,
-    "data": await response.json()
+    "data": { "bodies": [PLANET_API_DATA[bodyName]] }
   }
 }
 
